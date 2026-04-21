@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoteVault — Student Notes Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --cream: #ece6d8;
+    --accent: #e85d26;
+    --accent2: #2563eb;
+    --gold: #d4a017;
+    --muted: #8a8070;
+    --card-bg: #ffffff;
+    --border: #d8d0c0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 3rem;
+    background: rgba(245,240,232,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    align-items: center;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--ink);
+    color: var(--paper) !important;
+    padding: 0.55rem 1.3rem;
+    border-radius: 100px;
+    font-weight: 600 !important;
+    transition: background 0.2s, transform 0.15s !important;
+  }
+  .nav-cta:hover { background: var(--accent) !important; transform: scale(1.04); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 7rem 3rem 4rem;
+    gap: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    right: -120px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 650px;
+    height: 650px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,93,38,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1.4rem;
+    animation: fadeSlideUp 0.6s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    animation: fadeSlideUp 0.7s 0.1s ease both;
+    margin-bottom: 1.4rem;
+  }
+
+  .hero-title em {
+    font-style: normal;
+    color: var(--accent);
+    position: relative;
+  }
+  .hero-title em::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -4px; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 480px;
+    animation: fadeSlideUp 0.7s 0.2s ease both;
+    margin-bottom: 2.2rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeSlideUp 0.7s 0.3s ease both;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.85rem 2rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent); transform: translateY(-2px); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    color: var(--ink);
+    padding: 0.85rem 2rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--ink); transform: translateY(-2px); }
+
+  .hero-stats {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 3rem;
+    animation: fadeSlideUp 0.7s 0.4s ease both;
+  }
+
+  .stat-item { text-align: left; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+  }
+  .stat-label { font-size: 0.82rem; color: var(--muted); font-weight: 400; margin-top: 0.1rem; }
+
+  /* ── HERO VISUAL ── */
+  .hero-visual {
+    position: relative;
+    animation: fadeSlideUp 0.8s 0.2s ease both;
+  }
+
+  .note-stack {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .note-card-hero {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  }
+
+  .note-card-hero.back1 {
+    position: absolute;
+    top: -18px; left: 20px; right: -20px;
+    background: var(--cream);
+    border-color: #c8c0b0;
+    z-index: 1;
+  }
+  .note-card-hero.back2 {
+    position: absolute;
+    top: -34px; left: 38px; right: -36px;
+    background: #e0d8c8;
+    border-color: #b8b0a0;
+    z-index: 0;
+  }
+  .note-card-hero.front { position: relative; z-index: 2; }
+
+  .note-subject-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(232,93,38,0.12);
+    color: var(--accent);
+    padding: 0.25rem 0.7rem;
+    border-radius: 100px;
+    margin-bottom: 0.8rem;
+  }
+
+  .note-title-hero {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .note-meta-hero {
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .note-preview-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1.2rem;
+  }
+  .preview-line {
+    height: 8px;
+    background: var(--cream);
+    border-radius: 4px;
+  }
+  .preview-line:nth-child(1) { width: 100%; }
+  .preview-line:nth-child(2) { width: 85%; }
+  .preview-line:nth-child(3) { width: 92%; }
+  .preview-line:nth-child(4) { width: 70%; }
+
+  .note-actions-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .price-tag {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .price-tag.free { color: #16a34a; }
+  .price-tag.paid { color: var(--accent2); }
+
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .dl-btn:hover { background: var(--accent); }
+
+  /* ── SECTION GENERIC ── */
+  section { padding: 5rem 3rem; }
+
+  .section-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 540px;
+    line-height: 1.65;
+  }
+
+  /* ── SUBJECTS SECTION ── */
+  #subjects { background: var(--cream); }
+
+  .subjects-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  .subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .subject-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 1.6rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .subject-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--subject-color, var(--accent));
+    border-radius: 3px 3px 0 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .subject-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); border-color: transparent; }
+  .subject-card:hover::before { transform: scaleX(1); }
+
+  .subject-icon {
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .subject-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.02em;
+  }
+  .subject-count { font-size: 0.82rem; color: var(--muted); }
+
+  /* ── NOTES GRID ── */
+  #notes {
+    background: var(--paper);
+  }
+
+  .notes-controls {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .filter-btn {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    padding: 0.5rem 1.1rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    color: var(--ink);
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .search-wrap {
+    margin-left: auto;
+    position: relative;
+  }
+  .search-wrap input {
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    border-radius: 100px;
+    padding: 0.5rem 1.1rem 0.5rem 2.5rem;
+    font-size: 0.88rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+    color: var(--ink);
+  }
+  .search-wrap input:focus { border-color: var(--ink); }
+  .search-icon {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.4rem;
+  }
+
+  .note-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .note-card:hover { transform: translateY(-3px); box-shadow: 0 10px 35px rgba(0,0,0,0.09); }
+
+  .note-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.9rem;
+  }
+
+  .note-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.65rem;
+    border-radius: 100px;
+  }
+
+  .tag-math { background: rgba(37,99,235,0.1); color: #2563eb; }
+  .tag-physics { background: rgba(124,58,237,0.1); color: #7c3aed; }
+  .tag-chem { background: rgba(5,150,105,0.1); color: #059669; }
+  .tag-bio { background: rgba(217,119,6,0.1); color: #d97706; }
+  .tag-cs { background: rgba(232,93,38,0.1); color: var(--accent); }
+  .tag-econ { background: rgba(220,38,38,0.1); color: #dc2626; }
+  .tag-exam { background: rgba(15,23,42,0.1); color: #0f172a; }
+
+  .note-premium {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .note-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .note-author {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .author-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .note-stats-row {
+    display: flex;
+    gap: 1.2rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+  }
+
+  .note-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .star-rating {
+    display: flex;
+    gap: 2px;
+    font-size: 0.8rem;
+    color: var(--gold);
+  }
+
+  .note-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .note-price.free { color: #16a34a; }
+  .note-price.paid { color: var(--accent2); }
+
+  /* ── HOW IT WORKS ── */
+  #how { background: var(--ink); color: var(--paper); }
+  #how .section-title { color: var(--paper); }
+  #how .section-sub { color: rgba(245,240,232,0.6); }
+  #how .section-label { color: var(--accent); }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3.5rem;
+  }
+
+  .step-item {
+    position: relative;
+    padding: 2rem;
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 16px;
+    transition: background 0.3s;
+  }
+  .step-item:hover { background: rgba(245,240,232,0.08); }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    color: rgba(232,93,38,0.3);
+    line-height: 1;
+    margin-bottom: 0.8rem;
+  }
+
+  .step-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--paper);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .step-desc {
+    font-size: 0.9rem;
+    color: rgba(245,240,232,0.55);
+    line-height: 1.6;
+  }
+
+  /* ── PRICING ── */
+  #pricing { background: var(--cream); }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .pricing-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  .pricing-card:hover { transform: translateY(-5px); }
+  .pricing-card.featured {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .pricing-card.featured .plan-price,
+  .pricing-card.featured .plan-name,
+  .pricing-card.featured .plan-feature { color: var(--paper); }
+  .pricing-card.featured .plan-sub { color: rgba(245,240,232,0.55); }
+
+  .featured-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: white;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    color: var(--muted);
+  }
+  .plan-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.25rem;
+  }
+  .plan-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+  .plan-features {
+    list-style: none;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.8rem;
+  }
+  .plan-feature {
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ink);
+  }
+  .check { color: #16a34a; font-weight: 700; }
+
+  .plan-btn {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    border: 2px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.2s;
+  }
+  .plan-btn:hover { background: var(--ink); color: var(--paper); }
+  .pricing-card.featured .plan-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .pricing-card.featured .plan-btn:hover { background: #d44d18; border-color: #d44d18; }
+
+  /* ── UPLOAD CTA ── */
+  #upload {
+    background: var(--paper);
+    text-align: center;
+    padding: 6rem 3rem;
+  }
+
+  .upload-box {
+    max-width: 600px;
+    margin: 3rem auto 0;
+    background: var(--card-bg);
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-box:hover { border-color: var(--accent); background: rgba(232,93,38,0.03); }
+
+  .upload-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .upload-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.02em;
+  }
+  .upload-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .upload-types { font-size: 0.8rem; color: var(--muted); }
+  .upload-types span {
+    display: inline-block;
+    background: var(--cream);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin: 0 0.2rem;
+    font-weight: 500;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--ink);
+    color: rgba(245,240,232,0.6);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--paper);
+    letter-spacing: -0.03em;
+  }
+  .footer-logo span { color: var(--accent); }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .footer-links a {
+    color: rgba(245,240,232,0.5);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--paper); }
+
+  footer p { font-size: 0.82rem; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,13,13,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--paper);
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 90%;
+    max-width: 480px;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.25s;
+    border: 1.5px solid var(--border);
+    position: relative;
+  }
+  .modal-overlay.open .modal { transform: none; }
+
+  .modal-close {
+    position: absolute;
+    top: 1.2rem; right: 1.5rem;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--ink); }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.4rem;
+  }
+  .modal-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 2rem; }
+
+  .form-group { margin-bottom: 1.2rem; }
+  .form-label { font-size: 0.83rem; font-weight: 600; display: block; margin-bottom: 0.4rem; letter-spacing: 0.02em; }
+  .form-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--card-bg);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--ink); }
+  select.form-input { cursor: pointer; }
+
+  .modal-submit {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 0.5rem;
+  }
+  .modal-submit:hover { background: var(--accent); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: none; opacity: 1; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 6rem 1.5rem 3rem; gap: 2.5rem; }
+    .hero::after { display: none; }
+    section { padding: 3.5rem 1.5rem; }
+    .steps-grid, .pricing-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; text-align: center; padding: 2rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">Note<span>Vault</span></a>
+  <ul class="nav-links">
+    <li><a href="#subjects">Subjects</a></li>
+    <li><a href="#notes">Browse Notes</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#upload" class="nav-cta" onclick="openUploadModal(event)">Upload Notes</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <span class="hero-badge">🎓 Student Notes Hub</span>
+    <h1 class="hero-title">Study smarter.<br>Share <em>knowledge</em>.<br>Score higher.</h1>
+    <p class="hero-sub">Access thousands of student-written notes, summaries, and past papers. Upload yours and help others — or earn a little cash selling premium notes.</p>
+    <div class="hero-actions">
+      <a href="#notes" class="btn-primary">📚 Browse Notes</a>
+      <button class="btn-secondary" onclick="openUploadModal(event)">⬆️ Upload Notes</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">12,400+</div>
+        <div class="stat-label">Notes shared</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">8,300+</div>
+        <div class="stat-label">Students helped</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">34</div>
+        <div class="stat-label">Subjects covered</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="note-stack">
+      <div class="note-card-hero back2"></div>
+      <div class="note-card-hero back1"></div>
+      <div class="note-card-hero front">
+        <span class="note-subject-tag">📐 Calculus</span>
+        <div class="note-title-hero">Integration by Parts — Complete Guide</div>
+        <div class="note-meta-hero">
+          <span>📄 18 pages</span>
+          <span>⬇️ 2.1k downloads</span>
+        </div>
+        <div class="note-preview-lines">
+          <div class="preview-line"></div>
+          <div class="preview-line"></div>
+          <div class="preview-line"></div>
+          <div class="preview-line"></div>
+        </div>
+        <div class="note-actions-hero">
+          <span class="price-tag free">FREE</span>
+          <button class="dl-btn" onclick="showToast('📥 Downloaded!')">⬇️ Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUBJECTS -->
+<section id="subjects">
+  <div class="subjects-header">
+    <div>
+      <div class="section-label">Browse by subject</div>
+      <h2 class="section-title">What are you<br>studying today?</h2>
+    </div>
+    <a href="#notes" class="btn-secondary">View all notes →</a>
+  </div>
+  <div class="subjects-grid" id="subjectsGrid"></div>
+</section>
+
+<!-- NOTES GRID -->
+<section id="notes">
+  <div class="section-label">Notes library</div>
+  <h2 class="section-title" style="margin-bottom:0.5rem">Find your perfect<br>study material</h2>
+  <p class="section-sub" style="margin-bottom:2rem">Reviewed, rated, and uploaded by fellow students.</p>
+
+  <div class="notes-controls">
+    <button class="filter-btn active" onclick="filterNotes('all', this)">All</button>
+    <button class="filter-btn" onclick="filterNotes('free', this)">Free</button>
+    <button class="filter-btn" onclick="filterNotes('premium', this)">Premium</button>
+    <button class="filter-btn" onclick="filterNotes('exam', this)">Exam Papers</button>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search notes…" oninput="searchNotes(this.value)">
+    </div>
+  </div>
+
+  <div class="notes-grid" id="notesGrid"></div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div style="max-width:560px">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Simple, powerful,<br>community-driven</h2>
+    <p class="section-sub">Three steps between you and acing your exams.</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-item">
+      <div class="step-num">01</div>
+      <span class="step-icon">📤</span>
+      <div class="step-title">Upload your notes</div>
+      <p class="step-desc">Share PDFs, summaries, or typed notes. Set them free or add a $1 premium tag to earn money.</p>
+    </div>
+    <div class="step-item">
+      <div class="step-num">02</div>
+      <span class="step-icon">🔎</span>
+      <div class="step-title">Browse & discover</div>
+      <p class="step-desc">Filter by subject, topic, or keyword. Read ratings and previews before you download.</p>
+    </div>
+    <div class="step-item">
+      <div class="step-num">03</div>
+      <span class="step-icon">🚀</span>
+      <div class="step-title">Study & succeed</div>
+      <p class="step-desc">Download and study with confidence. Bookmark, rate, and revisit notes anytime.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div style="text-align:center; margin-bottom:1rem">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title">Free to start,<br>powerful when you grow</h2>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="plan-name">Basic</div>
+      <div class="plan-price">$0</div>
+      <div class="plan-sub">Always free</div>
+      <ul class="plan-features">
+        <li class="plan-feature"><span class="check">✓</span> Download free notes</li>
+        <li class="plan-feature"><span class="check">✓</span> Upload 5 notes/month</li>
+        <li class="plan-feature"><span class="check">✓</span> Access all subjects</li>
+        <li class="plan-feature"><span class="check">✓</span> Basic search filters</li>
+      </ul>
+      <button class="plan-btn" onclick="showToast('🎉 You\'re on Basic — it\'s free!')">Get started free</button>
+    </div>
+    <div class="pricing-card featured">
+      <div class="featured-badge">✨ Most Popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$4<span style="font-size:1.2rem;font-weight:400">/mo</span></div>
+      <div class="plan-sub">For serious students</div>
+      <ul class="plan-features">
+        <li class="plan-feature"><span class="check">✓</span> Everything in Basic</li>
+        <li class="plan-feature"><span class="check">✓</span> Unlimited premium downloads</li>
+        <li class="plan-feature"><span class="check">✓</span> Upload unlimited notes</li>
+        <li class="plan-feature"><span class="check">✓</span> Sell premium notes</li>
+        <li class="plan-feature"><span class="check">✓</span> Priority access to exam papers</li>
+      </ul>
+      <button class="plan-btn" onclick="showToast('💳 Redirecting to checkout…')">Get Pro</button>
+    </div>
+    <div class="pricing-card">
+      <div class="plan-name">Seller</div>
+      <div class="plan-price">$0</div>
+      <div class="plan-sub">Per note • $1 earn per sale</div>
+      <ul class="plan-features">
+        <li class="plan-feature"><span class="check">✓</span> Sell notes for $1 each</li>
+        <li class="plan-feature"><span class="check">✓</span> 80% revenue share</li>
+        <li class="plan-feature"><span class="check">✓</span> Monthly payout</li>
+        <li class="plan-feature"><span class="check">✓</span> Analytics dashboard</li>
+      </ul>
+      <button class="plan-btn" onclick="openUploadModal(event)">Start selling</button>
+    </div>
+  </div>
+</section>
+
+<!-- UPLOAD CTA -->
+<section id="upload">
+  <div class="section-label" style="text-align:center">Share your knowledge</div>
+  <h2 class="section-title" style="text-align:center">Got great notes?<br>The world needs them.</h2>
+  <div class="upload-box" onclick="openUploadModal(event)">
+    <span class="upload-icon">📂</span>
+    <div class="upload-title">Drag & drop your notes here</div>
+    <div class="upload-sub">or click to select files from your device</div>
+    <button class="btn-primary" style="margin-bottom:1rem" onclick="openUploadModal(event)">⬆️ Choose Files</button>
+    <div class="upload-types">Accepted formats: <span>PDF</span> <span>DOCX</span> <span>PPT</span> <span>TXT</span></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Note<span>Vault</span></div>
+  <ul class="footer-links">
+    <li><a href="#">About</a></li>
+    <li><a href="#">Terms</a></li>
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Help</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <p>© 2025 NoteVault. Made for students, by students.</p>
+</footer>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="uploadModal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Upload Your Notes</div>
+    <p class="modal-sub">Share with thousands of students and optionally earn $1 per download.</p>
+    <div class="form-group">
+      <label class="form-label">Note Title *</label>
+      <input class="form-input" type="text" placeholder="e.g. Calculus Integration Cheat Sheet">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject *</label>
+      <select class="form-input">
+        <option>Select subject…</option>
+        <option>Calculus</option>
+        <option>Physics</option>
+        <option>Chemistry</option>
+        <option>Biology</option>
+        <option>Computer Science</option>
+        <option>Economics</option>
+        <option>History</option>
+        <option>English Literature</option>
+        <option>Statistics</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" type="text" placeholder="Brief description of what's covered">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Pricing</label>
+      <select class="form-input">
+        <option>Free — Share with everyone</option>
+        <option>$1.00 — Premium note</option>
+      </select>
+    </div>
+    <button class="modal-submit" onclick="submitUpload()">📤 Upload Notes</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── DATA ──
+  const subjects = [
+    { name: 'Calculus', icon: '📐', count: 342, color: '#2563eb' },
+    { name: 'Physics', icon: '⚡', count: 289, color: '#7c3aed' },
+    { name: 'Chemistry', icon: '🧪', count: 215, color: '#059669' },
+    { name: 'Biology', icon: '🧬', count: 198, color: '#d97706' },
+    { name: 'Computer Science', icon: '💻', count: 312, color: '#e85d26' },
+    { name: 'Economics', icon: '📈', count: 176, color: '#dc2626' },
+    { name: 'Statistics', icon: '📊', count: 143, color: '#0891b2' },
+    { name: 'Exam Papers', icon: '📝', count: 541, color: '#0f172a' },
+  ];
+
+  const allNotes = [
+    { title: 'Integration by Parts — Complete Guide', subject: 'Calculus', tag: 'tag-math', author: 'Alex K.', initials: 'AK', pages: 18, downloads: 2100, stars: 5, price: 'free', type: 'free' },
+    { title: 'Thermodynamics Full Summary', subject: 'Physics', tag: 'tag-physics', author: 'Maya R.', initials: 'MR', pages: 24, downloads: 1850, stars: 5, price: '$1.00', type: 'premium' },
+    { title: 'Organic Chemistry Reaction Map', subject: 'Chemistry', tag: 'tag-chem', author: 'Sam L.', initials: 'SL', pages: 12, downloads: 987, stars: 4, price: 'free', type: 'free' },
+    { title: 'Cell Biology Master Notes', subject: 'Biology', tag: 'tag-bio', author: 'Priya M.', initials: 'PM', pages: 31, downloads: 1420, stars: 5, price: '$1.00', type: 'premium' },
+    { title: 'Data Structures & Algorithms Cheat Sheet', subject: 'CS', tag: 'tag-cs', author: 'Jin C.', initials: 'JC', pages: 8, downloads: 3200, stars: 5, price: 'free', type: 'free' },
+    { title: 'Microeconomics Past Paper 2023', subject: 'Economics', tag: 'tag-econ', author: 'Zoe T.', initials: 'ZT', pages: 16, downloads: 760, stars: 4, price: '$1.00', type: 'exam' },
+    { title: 'Calculus Final Exam Past Papers 2022–24', subject: 'Calculus', tag: 'tag-math', author: 'Ben W.', initials: 'BW', pages: 45, downloads: 4100, stars: 5, price: '$1.00', type: 'exam' },
+    { title: 'Python Programming Fundamentals', subject: 'CS', tag: 'tag-cs', author: 'Ana S.', initials: 'AS', pages: 22, downloads: 2700, stars: 5, price: 'free', type: 'free' },
+    { title: 'Wave Mechanics & Optics Summary', subject: 'Physics', tag: 'tag-physics', author: 'Omar F.', initials: 'OF', pages: 14, downloads: 890, stars: 4, price: 'free', type: 'free' },
+    { title: 'Macroeconomics Key Concepts', subject: 'Economics', tag: 'tag-econ', author: 'Lea D.', initials: 'LD', pages: 19, downloads: 1100, stars: 4, price: '$1.00', type: 'premium' },
+    { title: 'Statistics for Beginners Full Notes', subject: 'Statistics', tag: 'tag-math', author: 'Chris P.', initials: 'CP', pages: 28, downloads: 1680, stars: 5, price: 'free', type: 'free' },
+    { title: 'Biology Exam Past Papers Bundle', subject: 'Biology', tag: 'tag-bio', author: 'Nour A.', initials: 'NA', pages: 60, downloads: 2350, stars: 5, price: '$1.00', type: 'exam' },
+  ];
+
+  let visibleNotes = [...allNotes];
+
+  // ── RENDER SUBJECTS ──
+  function renderSubjects() {
+    const grid = document.getElementById('subjectsGrid');
+    grid.innerHTML = subjects.map(s => `
+      <div class="subject-card" style="--subject-color:${s.color}" onclick="filterBySubject('${s.name}')">
+        <span class="subject-icon">${s.icon}</span>
+        <div class="subject-name">${s.name}</div>
+        <div class="subject-count">${s.count} notes available</div>
+      </div>
+    `).join('');
+  }
+
+  // ── RENDER NOTES ──
+  function renderNotes(notes) {
+    const grid = document.getElementById('notesGrid');
+    if (!notes.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">No notes found. Try a different search.</div>`;
+      return;
+    }
+    grid.innerHTML = notes.map(n => `
+      <div class="note-card">
+        <div class="note-top">
+          <span class="note-tag ${n.tag}">${n.subject}</span>
+          ${n.type === 'premium' || n.type === 'exam' ? '<span class="note-premium">⭐ Premium</span>' : ''}
+        </div>
+        <div class="note-title">${n.title}</div>
+        <div class="note-author">
+          <span class="author-dot">${n.initials}</span>
+          ${n.author}
+        </div>
+        <div class="note-stats-row">
+          <span>📄 ${n.pages} pages</span>
+          <span>⬇️ ${n.downloads.toLocaleString()} downloads</span>
+        </div>
+        <div class="note-footer">
+          <div class="star-rating">${'★'.repeat(n.stars)}${'☆'.repeat(5 - n.stars)}</div>
+          <div style="display:flex;align-items:center;gap:0.8rem">
+            <span class="note-price ${n.price === 'free' ? 'free' : 'paid'}">${n.price === 'free' ? 'FREE' : n.price}</span>
+            <button class="dl-btn" onclick="handleDownload('${n.price}', '${n.title.substring(0,20)}')">
+              ${n.price === 'free' ? '⬇️ Get' : '🔒 Buy'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── FILTERS ──
+  function filterNotes(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (type === 'all') visibleNotes = [...allNotes];
+    else visibleNotes = allNotes.filter(n => n.type === type);
+    renderNotes(visibleNotes);
+  }
+
+  function filterBySubject(name) {
+    document.getElementById('notes').scrollIntoView({ behavior: 'smooth' });
+    const nameMap = { 'Computer Science': 'CS', 'Exam Papers': 'exam', 'Statistics': 'Statistics' };
+    const key = nameMap[name] || name;
+    if (name === 'Exam Papers') {
+      visibleNotes = allNotes.filter(n => n.type === 'exam');
+    } else {
+      visibleNotes = allNotes.filter(n => n.subject === key || n.subject === name);
+    }
+    renderNotes(visibleNotes.length ? visibleNotes : allNotes);
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn').classList.add('active');
+  }
+
+  function searchNotes(val) {
+    const q = val.toLowerCase();
+    renderNotes(allNotes.filter(n => n.title.toLowerCase().includes(q) || n.subject.toLowerCase().includes(q)));
+  }
+
+  // ── DOWNLOAD HANDLER ──
+  function handleDownload(price, title) {
+    if (price === 'free') {
+      showToast('📥 Downloading: ' + title + '…');
+    } else {
+      showToast('🔒 Sign up for Pro to access premium notes!');
+    }
+  }
+
+  // ── MODAL ──
+  function openUploadModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('uploadModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('uploadModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('uploadModal')) closeModal();
+  }
+  function submitUpload() {
+    closeModal();
+    showToast('🎉 Notes uploaded successfully! Pending review.');
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  // ── INIT ──
+  renderSubjects();
+  renderNotes(allNotes);
+</script>
+</body>
+</html>
